@@ -24,7 +24,7 @@ int opened = 180;
 #define GATE 9
 
 // photoresistor uses 10k resistor on ground to work
-int photoResistor = A0;
+int photoResistor = A2;
 
 int sensorValue;
 
