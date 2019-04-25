@@ -24,9 +24,10 @@ int opened = 180;
 #define GATE 9
 
 // photoresistor uses 10k resistor on ground to work
-int photoResistor = A2;
+// OSOYOO light dark sensor comes with pot for sensitivity
+#define SENSOR 2
 
-int sensorValue;
+bool sensorValue;
 
 // value for white cardboard is ~790
 // value for dark cardboard is ~650
@@ -39,8 +40,8 @@ void setup() {
   pinMode(MOTOR_R, OUTPUT);
   pinMode(MOTOR_L, OUTPUT);
 
-  //photoresistor
-  //pinMode(photoResistor, INPUT);
+  // Light-dark sensor
+  pinMode(SENSOR, INPUT);
   
   // micro-servo
   gate.attach(GATE);
@@ -50,19 +51,23 @@ void loop() {
   //digitalWrite(MOTOR_R, HIGH);
   //analogWrite(MOTOR_R, HIGH);
   
-  sensorValue = analogRead(photoResistor);
+  sensorValue = digitalRead(SENSOR);
   
   Serial.println(sensorValue);  
-  
-  if ( sensorValue > 700) {
-    gate.write(closed);
-  } else {
+  // Black detected == HIGH
+  if (sensorValue == HIGH) {
     for (pos = closed; pos <= opened; pos += 1) {
-      gate.write(pos);
-      delay(13);
-    }
+    gate.write(pos);
+    delay(13);
+    }    
+    Serial.println("Detecting BLACK.");
+  } else {
+    Serial.println("Detecting WHITE.");
+    gate.write(closed);
   }
   delay(200);
+  
+ 
   
 
 }
