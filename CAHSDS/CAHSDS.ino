@@ -11,8 +11,9 @@
 Servo gate;
 
 int pos = 0;
-int closed = 0;
-int opened = 180;
+const int closed = 0;
+const int opened = 165;
+const int ballDeliveryTime = 700;
 
 // Directions for wheels.
 #define FORWARD 1
@@ -29,8 +30,12 @@ int opened = 180;
 
 bool sensorValue;
 
-// value for white cardboard is ~790
-// value for dark cardboard is ~650
+bool ballDelivered;
+
+bool resetTriggered;
+
+// value for white is LOW
+// value for black is HIGH
 
 
 void setup() {
@@ -45,6 +50,9 @@ void setup() {
   
   // micro-servo
   gate.attach(GATE);
+
+  ballDelivered = false;
+  resetTriggered = true;
 }
 
 void loop() {
@@ -52,24 +60,34 @@ void loop() {
   //analogWrite(MOTOR_R, HIGH);
   
   sensorValue = digitalRead(SENSOR);
-  
+  //gate.write(closed);
   Serial.println(sensorValue);  
   // Black detected == HIGH
   if (sensorValue == HIGH) {
-    for (pos = closed; pos <= opened; pos += 1) {
-    gate.write(pos);
-    delay(13);
-    }    
-    Serial.println("Detecting BLACK.");
-  } else {
-    Serial.println("Detecting WHITE.");
-    gate.write(closed);
+    if(!ballDelivered && resetTriggered) {
+      deliverBall();
+    }
+    //resetTriggered = false;
   }
-  delay(200);
-  
- 
-  
+  if (sensorValue == LOW) {
+    if (ballDelivered) {
+      resetTriggered = true;
+    }
+    if (resetTriggered) {
+      ballDelivered = false;
+    }
+  }
+  // if ballDelivered once
+  //  keep gate.write(closed)
+  //  until sensorValue detects "white" (low)
+  //  then reset
+}
 
+void deliverBall() {
+    gate.write(opened);
+    delay(ballDeliveryTime);
+    gate.write(closed);
+    ballDelivered = true;
 }
 
 void setupMotors() {
