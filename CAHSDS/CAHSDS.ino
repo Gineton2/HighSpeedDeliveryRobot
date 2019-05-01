@@ -7,6 +7,15 @@
  */
 
 #include <Servo.h>
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+
+// Create the motor shield object with the default I2C address
+Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
+
+// Select which 'port' M1, M2, M3 or M4. In this case, M1 and M2
+Adafruit_DCMotor *motorOne = AFMS.getMotor(1);
+Adafruit_DCMotor *motorTwo = AFMS.getMotor(2);
 
 Servo gate;
 
@@ -14,13 +23,6 @@ int pos = 0;
 const int closed = 0;
 const int opened = 165;
 const int ballDeliveryTime = 700;
-
-// Directions for wheels.
-#define FORWARD 1
-#define REVERSE 0
-
-#define MOTOR_R 5
-#define MOTOR_L 4
 
 #define GATE 9
 
@@ -41,16 +43,29 @@ bool resetTriggered;
 void setup() {
   Serial.begin(9600);
   
-  // Setup motors to output
-  pinMode(MOTOR_R, OUTPUT);
-  pinMode(MOTOR_L, OUTPUT);
-
   // Light-dark sensor
   pinMode(SENSOR, INPUT);
   
   // micro-servo
   gate.attach(GATE);
 
+  // Motorshield
+  AFMS.begin();  // create with the default frequency 1.6KHz
+  
+  // Set the speed to start, from 0 (off) to 255 (max speed)
+  
+  // motorOne
+  motorOne->setSpeed(150);
+  motorOne->run(FORWARD);
+  // turn on motor
+  motorOne->run(RELEASE);
+
+  // motorTwo
+  motorTwo->setSpeed(150);
+  motorTwo->run(FORWARD);
+  // turn on motor
+  motorTwo->run(RELEASE);
+  
   ballDelivered = false;
   resetTriggered = true;
 }
@@ -65,9 +80,15 @@ void loop() {
   // Black detected == HIGH
   if (sensorValue == HIGH) {
     if(!ballDelivered && resetTriggered) {
+      motorOne->setSpeed(0);
+      motorTwo->setSpeed(0);
       deliverBall();
     }
-    //resetTriggered = false;
+  
+  motorOne->setSpeed(255);
+  motorTwo->setSpeed(255);
+  
+  //resetTriggered = false;
   }
   if (sensorValue == LOW) {
     if (ballDelivered) {
@@ -88,7 +109,4 @@ void deliverBall() {
     delay(ballDeliveryTime);
     gate.write(closed);
     ballDelivered = true;
-}
-
-void setupMotors() {
 }
