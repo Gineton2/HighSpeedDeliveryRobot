@@ -22,9 +22,10 @@ Servo gate;
 int pos = 0;
 const int closed = 0;
 const int opened = 165;
-const int ballDeliveryTime = 700;
+const int gateOpenTime = 700;
+const int ballDeliveryTime = 1000;
 
-#define GATE 9
+#define GATE 10
 
 // photoresistor uses 10k resistor on ground to work
 // OSOYOO light dark sensor comes with pot for sensitivity
@@ -55,38 +56,30 @@ void setup() {
   // Set the speed to start, from 0 (off) to 255 (max speed)
   
   // motorOne
-  motorOne->setSpeed(150);
-  motorOne->run(FORWARD);
+  motorOne->setSpeed(255);
   // turn on motor
-  motorOne->run(RELEASE);
 
   // motorTwo
-  motorTwo->setSpeed(150);
-  motorTwo->run(FORWARD);
+  motorTwo->setSpeed(255);
   // turn on motor
-  motorTwo->run(RELEASE);
   
   ballDelivered = false;
   resetTriggered = true;
 }
 
 void loop() {
-  //digitalWrite(MOTOR_R, HIGH);
-  //analogWrite(MOTOR_R, HIGH);
-  
+
   sensorValue = digitalRead(SENSOR);
   //gate.write(closed);
   Serial.println(sensorValue);  
   // Black detected == HIGH
   if (sensorValue == HIGH) {
     if(!ballDelivered && resetTriggered) {
-      motorOne->setSpeed(0);
-      motorTwo->setSpeed(0);
+      stopMotors();
       deliverBall();
+      delay(ballDeliveryTime);
+      runMotors();
     }
-  
-  motorOne->setSpeed(255);
-  motorTwo->setSpeed(255);
   
   //resetTriggered = false;
   }
@@ -106,7 +99,18 @@ void loop() {
 
 void deliverBall() {
     gate.write(opened);
-    delay(ballDeliveryTime);
+    delay(gateOpenTime);
     gate.write(closed);
     ballDelivered = true;
+}
+
+void runMotors() {
+  //turn on motors
+  motorOne->run(FORWARD);
+  motorTwo->run(FORWARD);
+}
+
+void stopMotors() {
+  motorOne->run(RELEASE);
+  motorTwo->run(RELEASE);
 }
