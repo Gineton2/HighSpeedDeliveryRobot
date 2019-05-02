@@ -64,8 +64,8 @@ void setup() {
   AFMS.begin();  // create with the default frequency 1.6KHz
   
   // Set the speed to start, from 0 (off) to 255 (max speed)
-  motorOne->setSpeed(motorSpeed);
-  motorTwo->setSpeed(motorSpeed);
+  motorOne->setSpeed(motorSpeedFull);
+  motorTwo->setSpeed(motorSpeedFull);
   
   ballDelivered = false;
   resetTriggered = true;
