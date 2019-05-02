@@ -24,6 +24,7 @@ const int closed = 0;
 const int opened = 165;
 const int gateOpenTime = 700;
 const int ballDeliveryTime = 1000;
+const int resetWaitTime = 500;
 
 #define GATE 10
 
@@ -84,6 +85,7 @@ void loop() {
   //resetTriggered = false;
   }
   if (sensorValue == LOW) {
+    delay(resetWaitTime);
     if (ballDelivered) {
       resetTriggered = true;
     }
