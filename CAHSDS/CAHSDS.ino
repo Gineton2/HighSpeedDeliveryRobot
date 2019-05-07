@@ -1,11 +1,11 @@
 /* California High Speed Rail Delivery System
  * by: Gineton Alencar
- * date: 04/16/2019
+ * date: 2019/04/16
+ * last updated: 2019/05/07
  * license: TBD
- * 
- * 
  */
 
+// load libraries
 #include <Servo.h>
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
@@ -13,18 +13,18 @@
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
 
-// Select which 'port' M1, M2, M3 or M4. In this case, M1 and M2
+// Select which 'port' M1, M2, M3 or M4. In this case, M1 and M2.
 Adafruit_DCMotor *motorOne = AFMS.getMotor(1);
 Adafruit_DCMotor *motorTwo = AFMS.getMotor(2);
 
-// name of servo gate
+// Name servo "gate."
 Servo gate;
 
-// servo gate open and closed values
+// Servo gate open and closed values;
 const int closed = 0;
 const int opened = 165;
 
-// set wait times
+// Set wait times for ball drop
 const int gateOpenTime = 700;
 const int ballDeliveryTime = 1000;
 const int resetWaitTime = 700;
@@ -42,6 +42,8 @@ const int motorSpeedFull = 255;
 // Direction forward/backward trigger
 // if on go forward, if off go backward
 #define DIRECTION 8
+
+#define POWER 7
 
 // bools for sanity checks
 bool sensorValue;
@@ -74,6 +76,7 @@ void setup() {
 void loop() {
 
   sensorValue = digitalRead(SENSOR);
+  powerOn = digitalRead(POWER);
 
   Serial.println(sensorValue); 
    
@@ -82,7 +85,7 @@ void loop() {
   // then stop motos, deliver ball,
   // wait for ball drop,
   // and run motors again.
-  if (sensorValue == HIGH) {
+  if (sensorValue == HIGH && powerOn) {
     if(!ballDelivered && resetTriggered) {
       stopMotors();
       deliverBall();
@@ -96,7 +99,7 @@ void loop() {
   // keep gate closed
   // until sensorValue detects "white" (low)
   // then reset
-  if (sensorValue == LOW) {
+  if (sensorValue == LOW && powerOn) {
     delay(resetWaitTime);
     if (sensorValue == LOW) {
       if (ballDelivered) {
