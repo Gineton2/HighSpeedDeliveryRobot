@@ -121,7 +121,7 @@ void runMotors() {
   // turn on motors
   // if DIRECTION trigger on go forward
   // else go backwards
-  if (digitalRead(DIRECTION) {
+  if (digitalRead(DIRECTION)) {
     motorOne->run(FORWARD);
     motorTwo->run(FORWARD);
   } else {
