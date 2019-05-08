@@ -49,6 +49,7 @@ const int motorSpeedFull = 255;
 bool sensorValue;
 bool ballDelivered;
 bool resetTriggered;
+bool powerOn;
 
 
 void setup() {
@@ -58,6 +59,13 @@ void setup() {
   // value for white is LOW
   // value for black is HIGH
   pinMode(SENSOR, INPUT);
+
+  // Set Power and Direction switches to PULLUP.
+  // This makes readings opposite (on is off, off is on).
+  // PULLUP is used to avoid needing external resistors,
+  // taking advantage of the Arduino board's internal resistors.
+  pinMode(POWER, INPUT_PULLUP);
+  pinMode(DIRECTION, INPUT_PULLUP);
   
   // micro-servo
   gate.attach(GATE);
@@ -78,7 +86,9 @@ void loop() {
   sensorValue = digitalRead(SENSOR);
   powerOn = digitalRead(POWER);
 
-  Serial.println(sensorValue); 
+  Serial.println("Sensor: " + sensorValue); 
+  Serial.println("Power: " + digitalRead(POWER));
+  Serial.println("Direction: " + digitalRead(DIRECTION));
    
   // Black detected == HIGH
   // If black detected, ball not delivered and reset not triggered
