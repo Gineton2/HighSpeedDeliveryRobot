@@ -21,13 +21,13 @@ Adafruit_DCMotor *motorTwo = AFMS.getMotor(2);
 Servo gate;
 
 // Servo gate open and closed values;
-const int closed = 0;
-const int opened = 165;
+const int closed = 3;
+const int opened = 75;
 
 // Set wait times for ball drop
 const int gateOpenTime = 700;
 const int ballDeliveryTime = 1000;
-const int resetWaitTime = 700;
+const int resetWaitTime = 100;
 
 // set motor speed value
 const int motorSpeedFull = 255;
@@ -43,6 +43,7 @@ const int motorSpeedFull = 255;
 // if on go forward, if off go backward
 #define DIRECTION 8
 
+// Switch for turning vehicle on and off
 #define POWER 7
 
 // bools for sanity checks
@@ -50,6 +51,7 @@ bool sensorValue;
 bool ballDelivered;
 bool resetTriggered;
 bool powerOn;
+bool motorDirection;
 
 
 void setup() {
@@ -79,44 +81,55 @@ void setup() {
   
   ballDelivered = false;
   resetTriggered = true;
+
+  gate.write(closed);
 }
 
 void loop() {
 
   sensorValue = digitalRead(SENSOR);
-  powerOn = digitalRead(POWER);
+  powerOn = !digitalRead(POWER);
+  motorDirection = digitalRead(DIRECTION);
+  
 
   Serial.println("Sensor: " + sensorValue); 
-  Serial.println("Power: " + digitalRead(POWER));
-  Serial.println("Direction: " + digitalRead(DIRECTION));
-   
-  // Black detected == HIGH
-  // If black detected, ball not delivered and reset not triggered
-  // then stop motos, deliver ball,
-  // wait for ball drop,
-  // and run motors again.
-  if (sensorValue == HIGH && powerOn) {
-    if(!ballDelivered && resetTriggered) {
-      stopMotors();
-      deliverBall();
-      delay(ballDeliveryTime);
-      runMotors();
-    }
+  Serial.println("Power: " + powerOn);
+  Serial.println("Direction: " + motorDirection);
+
+  if(!powerOn) {
+    stopMotors();
+    //gate.write(closed);
+  } else {
   
-  }
-  
-  // if ballDelivered 
-  // keep gate closed
-  // until sensorValue detects "white" (low)
-  // then reset
-  if (sensorValue == LOW && powerOn) {
-    delay(resetWaitTime);
-    if (sensorValue == LOW) {
-      if (ballDelivered) {
-        resetTriggered = true;
+    // Black detected == HIGH
+    // If black detected, ball not delivered and reset not triggered
+    // then stop motos, deliver ball,
+    // wait for ball drop,
+    // and run motors again.
+    if (sensorValue == HIGH) {
+      if(!ballDelivered && resetTriggered) {
+        stopMotors();
+        deliverBall();
+        delay(ballDeliveryTime);
+        runMotors();
       }
-      if (resetTriggered) {
-        ballDelivered = false;
+    
+    }
+    
+    // if ballDelivered 
+    // keep gate closed
+    // until sensorValue detects "white" (low)
+    // then reset
+    if (sensorValue == LOW) {
+      delay(resetWaitTime);
+      if (sensorValue == LOW) {
+        if (ballDelivered) {
+          resetTriggered = true;
+        }
+        if (resetTriggered) {
+          ballDelivered = false;
+        }
+        runMotors();
       }
     }
   }
@@ -134,7 +147,7 @@ void runMotors() {
   // turn on motors
   // if DIRECTION trigger on go forward
   // else go backwards
-  if (digitalRead(DIRECTION)) {
+  if(motorDirection) {
     motorOne->run(FORWARD);
     motorTwo->run(FORWARD);
   } else {
