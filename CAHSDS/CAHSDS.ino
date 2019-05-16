@@ -1,9 +1,9 @@
 /* California High Speed Rail Delivery System
- * by: Gineton Alencar
- * date: 2019/04/16
- * last updated: 2019/05/07
- * license: TBD
- */
+   by: Gineton Alencar
+   date: 2019/04/16
+   last updated: 2019/05/14
+   license: TBD
+*/
 
 // load libraries
 #include <Servo.h>
@@ -11,7 +11,7 @@
 #include <Adafruit_MotorShield.h>
 
 // Create the motor shield object with the default I2C address
-Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
 // Select which 'port' M1, M2, M3 or M4. In this case, M1 and M2.
 Adafruit_DCMotor *motorOne = AFMS.getMotor(1);
@@ -25,9 +25,10 @@ const int closed = 3;
 const int opened = 75;
 
 // Set wait times for ball drop
-const int gateOpenTime = 700;
-const int ballDeliveryTime = 1000;
+const int gateOpenTime = 200;
+const int ballDeliveryTime = 200;
 const int resetWaitTime = 100;
+const int centerDelayTime = 50;
 
 // set motor speed value
 const int motorSpeedFull = 255;
@@ -38,6 +39,7 @@ const int motorSpeedFull = 255;
 // OSOYOO light dark sensor
 // comes with pot for sensitivity
 #define SENSOR 2
+//#define SENSOR_ALT 3
 
 // Direction forward/backward trigger
 // if on go forward, if off go backward
@@ -56,11 +58,12 @@ bool motorDirection;
 
 void setup() {
   Serial.begin(9600);
-  
+
   // Light-dark sensor
   // value for white is LOW
   // value for black is HIGH
   pinMode(SENSOR, INPUT);
+  //pinMode(SENSOR_ALT, INPUT);
 
   // Set Power and Direction switches to PULLUP.
   // This makes readings opposite (on is off, off is on).
@@ -68,17 +71,17 @@ void setup() {
   // taking advantage of the Arduino board's internal resistors.
   pinMode(POWER, INPUT_PULLUP);
   pinMode(DIRECTION, INPUT_PULLUP);
-  
+
   // micro-servo
   gate.attach(GATE);
 
   // Motorshield
   AFMS.begin();  // create with the default frequency 1.6KHz
-  
+
   // Set the speed to start, from 0 (off) to 255 (max speed)
   motorOne->setSpeed(motorSpeedFull);
   motorTwo->setSpeed(motorSpeedFull);
-  
+
   ballDelivered = false;
   resetTriggered = true;
 
@@ -87,36 +90,42 @@ void setup() {
 
 void loop() {
 
+//  if (motorDirection) {
+//    sensorValue = digitalRead(SENSOR);
+//  } else {
+//    sensorValue = digitalRead(SENSOR_ALT);
+//  }
   sensorValue = digitalRead(SENSOR);
   powerOn = !digitalRead(POWER);
   motorDirection = digitalRead(DIRECTION);
-  
 
-  Serial.println("Sensor: " + sensorValue); 
+
+  Serial.println("Sensor: " + sensorValue);
   Serial.println("Power: " + powerOn);
   Serial.println("Direction: " + motorDirection);
 
-  if(!powerOn) {
+  if (!powerOn) {
     stopMotors();
     //gate.write(closed);
   } else {
-  
+
     // Black detected == HIGH
     // If black detected, ball not delivered and reset not triggered
     // then stop motos, deliver ball,
     // wait for ball drop,
     // and run motors again.
     if (sensorValue == HIGH) {
-      if(!ballDelivered && resetTriggered) {
+      if (!ballDelivered && resetTriggered) {
+        delay(centerDelayTime);
         stopMotors();
         deliverBall();
         delay(ballDeliveryTime);
         runMotors();
       }
-    
+
     }
-    
-    // if ballDelivered 
+
+    // if ballDelivered
     // keep gate closed
     // until sensorValue detects "white" (low)
     // then reset
@@ -135,24 +144,24 @@ void loop() {
   }
 }
 
-// 
+//
 void deliverBall() {
-    gate.write(opened);
-    delay(gateOpenTime);
-    gate.write(closed);
-    ballDelivered = true;
+  gate.write(opened);
+  delay(gateOpenTime);
+  gate.write(closed);
+  ballDelivered = true;
 }
 
 void runMotors() {
   // turn on motors
   // if DIRECTION trigger on go forward
   // else go backwards
-  if(motorDirection) {
+  if (motorDirection) {
     motorOne->run(FORWARD);
     motorTwo->run(FORWARD);
   } else {
-      motorOne->run(BACKWARD);
-      motorTwo->run(BACKWARD);
+    motorOne->run(BACKWARD);
+    motorTwo->run(BACKWARD);
   }
 }
 
